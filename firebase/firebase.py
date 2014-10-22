@@ -162,28 +162,20 @@ class FirebaseUser(object):
     Class that wraps the credentials of the authenticated user. Think of
     this as a container that holds authentication related data.
     """
-    def __init__(self, email, firebase_auth_token, provider, id=None):
-        self.email = email
+    def __init__(self, firebase_auth_token, **extra):
         self.firebase_auth_token = firebase_auth_token
-        self.provider = provider
-        self.id = id
+        self.extra = extra
 
 
 class FirebaseAuthentication(object):
     """
     Class that wraps the Firebase SimpleLogin mechanism. Actually this
     class does not trigger a connection, simply fakes the auth action.
-
-    In addition, the provided email and password information is totally
-    useless and they never appear in the ``auth`` variable at the server.
     """
-    def __init__(self, secret, email, debug=False, admin=False, extra=None):
+    def __init__(self, secret, debug=False, admin=False, extra=None):
         self.authenticator = FirebaseTokenGenerator(secret, debug, admin)
-        self.email = email
-        self.provider = 'password'
         self.extra = (extra or {}).copy()
-        self.extra.update({'debug': debug, 'admin': admin,
-                           'email': self.email, 'provider': self.provider})
+        self.extra.update({'debug': debug, 'admin': admin})
 
     def get_user(self):
         """
@@ -191,8 +183,7 @@ class FirebaseAuthentication(object):
         the token, email and the provider data.
         """
         token = self.authenticator.create_token(self.extra)
-        user_id = self.extra.get('id')
-        return FirebaseUser(self.email, token, self.provider, user_id)
+        return FirebaseUser(token, **self.extra)
 
 
 class FirebaseApplication(object):
